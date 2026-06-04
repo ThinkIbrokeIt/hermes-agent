@@ -231,21 +231,28 @@ There's no IAM role or scope that fixes this. The endpoint only accepts user
 credentials. So the bot has to act *as a user* whenever it uploads a file —
 specifically, as the user who asked for the file.
 
-### One-time host setup
+### One-time OAuth client setup
 
 1. Go to **APIs & Services → Credentials** in the same GCP project.
 2. **Create credentials → OAuth client ID → Desktop app**.
 3. Download the JSON. Move it onto the host that runs Hermes.
-4. On the host, register the client with Hermes:
+4. Register the client with Hermes:
 
 ```bash
 python -m plugins.platforms.google_chat.oauth \
     --client-secret /path/to/client_secret.json
 ```
 
-That writes `~/.hermes/google_chat_user_client_secret.json`. This is shared
-infrastructure — it identifies the OAuth *app*, not any individual user. One
-file per host is enough no matter how many users authorize later.
+That writes `google_chat_user_client_secret.json` into the active Hermes home
+(`$HERMES_HOME`, default `~/.hermes`). It identifies the OAuth *app*, not any
+individual user, so a single registration covers every user who later
+authorizes.
+
+The file is scoped to the profile it was registered under. If you run Hermes
+under a named profile (`hermes -p <name> gateway …`), register the client while
+that profile is active — its `HERMES_HOME` is `<root>/profiles/<name>`, so run
+the command with that profile so the secret lands where the gateway reads it.
+Each profile keeps its own client secret and its own per-user tokens.
 
 ### Per-user authorization (in chat)
 
